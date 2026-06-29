@@ -1,0 +1,286 @@
+:root {
+  --primary-honey: #f59e0b;     
+  --light-honey: #fef3c7;     
+  --dark-honey: #d97706;        
+  --bg-soft: #fffbeb;           
+  --text-main: #1f2937;         
+  --text-muted: #4b5563;        
+  --white: #ffffff;
+  --border-color: #fde68a;      
+
+  /* Status Indicators */
+  --status-success: #10b981;    
+  --status-danger: #ef4444;     
+  --status-pending: #3b82f6;  
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-soft);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+/* Header Navbar */
+header {
+  background-color: var(--primary-honey);
+  color: var(--white);
+  padding: 15px 20px;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header .logout-btn {
+  font-size: 14px;
+  padding: 6px 12px;
+  background-color: var(--dark-honey);
+  border-radius: 4px;
+  color: var(--white);
+  text-decoration: none;
+}
+
+header .logout-btn:hover {
+  background-color: var(--text-main);
+}
+
+/* Main Content Containers */
+.container {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+/* Cards & Components */
+.card {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.05), 0 2px 4px -1px rgba(245, 158, 11, 0.03);
+  margin-bottom: 25px;
+}
+
+/* Centered Form Cards (For Login/Register Layouts) */
+.card-auth {
+  width: 100%;
+  max-width: 400px;
+  margin: 60px auto;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 15px;
+  color: var(--dark-honey);
+}
+
+p {
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+/* Forms & UI Controls */
+.form-group {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: #fffdf5;
+  color: var(--text-main);
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-honey);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+/* Interactive Utility Buttons */
+button, .btn {
+  display: inline-block;
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-honey);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--dark-honey);
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* This creates an even space between all buttons */
+  margin-bottom: 20px; /* Space between the buttons and the login text */
+}
+
+.button-group button {
+  margin-bottom: 0; /* Ensures existing margins don't double up with the gap */
+}
+
+/* Alternate Functional Styles */
+.btn-secondary { background-color: var(--text-muted); }
+.btn-secondary:hover { background-color: var(--text-main); }
+
+.btn-success { background-color: var(--status-success); }
+.btn-success:hover { background-color: #059669; }
+
+.btn-danger { background-color: var(--status-danger); }
+.btn-danger:hover { background-color: #dc2626; }
+
+/* Dashboard Layout Grids */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* List Component Styling */
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* Custom Status Badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+.bg-success { background-color: var(--status-success); }
+.bg-danger { background-color: var(--status-danger); }
+.bg-pending { background-color: var(--status-pending); }
+
+/* Table Interface System */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background-color: var(--light-honey);
+  color: var(--dark-honey);
+}
+
+.hidden {
+  display: none !important;
+}
+
+a {
+  color: var(--dark-honey);
+  text-decoration: none;
+  font-weight: 600;
+}
+a:hover {
+  text-decoration: underline;
+}
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f39c12;
+  padding: 15px 20px;
+  color: #ffffff;
+}
+
+/* Arrange the logo and the text group side-by-side */
+.brand-section {
+  display: flex;
+  align-items: flex-start; /* Aligns the top of the emoji with the top of the title */
+  gap: 12px;               /* Space between the honey pot and your text */
+}
+
+/* Force the title and tagline to stack vertically, aligned perfectly on the left */
+.text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;                /* Control the gap between title and tagline */
+}
+
+.text-group h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: bold;
+  line-height: 1.2;       /* Keeps text structure snug */
+}
+
+.logo {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.tagline {
+  font-size: 0.9rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+}
+
+.btn-logout {
+  background-color: #d35400;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}

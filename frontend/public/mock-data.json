@@ -1,0 +1,35 @@
+{
+  "users": [
+    { 
+      "id": 1, 
+      "name": "Encik Ahmad bin Ali", 
+      "dob": "1958-04-12", 
+      "email": "ahmad58@gmail.com", 
+      "role": "patient",
+      "compliance_rate": 94
+    },
+    { 
+      "id": 2, 
+      "name": "Puan Haida binti Kamal", 
+      "dob": "1945-09-23", 
+      "email": "haidakamal@gmail.com", 
+      "role": "patient",
+      "compliance_rate": 62
+    }
+  ],
+  "medications": [
+    { "id": 101, "name": "Metformin", "form": "Tablet", "strength": "500mg", "default_unit": "pill" },
+    { "id": 102, "name": "Lysin", "form": "Syrup", "strength": "5ml", "default_unit": "tsp" },
+    { "id": 201, "name": "Amlodipine", "form": "Capsule", "strength": "10mg", "default_unit": "capsule" }
+  ],
+  "schedules": [
+    { "id": 1001, "patient_id": 1, "medication_id": 101, "time": "08:00 AM" },
+    { "id": 1002, "patient_id": 1, "medication_id": 102, "time": "02:00 PM" },
+    { "id": 2001, "patient_id": 2, "medication_id": 201, "time": "08:00 AM" }
+  ],
+  "adherence_logs": [
+    { "id": 5001, "schedule_id": 1001, "status": "Taken", "check_in": "08:05 AM" },
+    { "id": 5002, "schedule_id": 1002, "status": "Pending", "check_in": null },
+    { "id": 5003, "schedule_id": 2001, "status": "Missed", "check_in": null }
+  ]
+}
