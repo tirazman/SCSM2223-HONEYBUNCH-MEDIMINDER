@@ -1,4 +1,4 @@
-const express = require('express');
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });const express = require('express');
 const cors    = require('cors');
 const mysql   = require('mysql2');
 const jwt     = require('jsonwebtoken');
@@ -29,7 +29,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('(.*)', cors(corsOptions)); // ✅ fixed wildcard
 app.use(express.json());
 
 // ─── 2. DATABASE ──────────────────────────────────────────────────────────────
