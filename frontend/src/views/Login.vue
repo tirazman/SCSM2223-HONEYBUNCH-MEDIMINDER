@@ -45,25 +45,6 @@
         </router-link>
       </p>
 
-      <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; font-size: 0.85rem; color: #666; text-align: left; line-height: 1.6;">
-        <p style="margin: 0 0 6px 0; font-weight: bold; color: #444;">Demo logins:</p>
-        
-        <div style="margin-bottom: 4px;">
-          <strong style="color: #d35400;">Patient:</strong> 
-          <span style="font-family: monospace; background: #f9f9f9; padding: 2px 4px; border-radius: 3px;">patient@mediminder.test</span> / <span>password</span>
-        </div>
-        
-        <div style="margin-bottom: 4px;">
-          <strong style="color: #d35400;">Caregiver:</strong> 
-          <span style="font-family: monospace; background: #f9f9f9; padding: 2px 4px; border-radius: 3px;">caregiver@mediminder.test</span> / <span>password</span>
-        </div>
-        
-        <div>
-          <strong style="color: #d35400;">Clinic Admin:</strong> 
-          <span style="font-family: monospace; background: #f9f9f9; padding: 2px 4px; border-radius: 3px;">admin@mediminder.test</span> / <span>password</span>
-        </div>
-      </div>
-
     </div>
   </div>
 </template>
