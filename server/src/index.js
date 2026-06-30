@@ -11,7 +11,6 @@ const PORT = process.env.PORT || 8000;
 const corsOptions = {
   origin: (origin, callback) => {
     console.log('[CORS] Request from:', origin);
-
     const allowed =
       !origin ||
       origin.endsWith('.vercel.app') ||
@@ -30,7 +29,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // ✅ same config used for preflight
+app.options('(.*)', cors(corsOptions)); // ✅ fixed wildcard
 app.use(express.json());
 
 // ─── 2. DATABASE ──────────────────────────────────────────────────────────────
