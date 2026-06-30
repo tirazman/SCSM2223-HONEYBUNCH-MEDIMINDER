@@ -53,7 +53,9 @@
       <!-- RIGHT: Stats & Caregiver -->
       <div>
         <div class="card" style="text-align: center;">
-          <h2>7-Day Performance</h2>
+          <h2
+          
+          >7-Day Performance</h2>
           <div style="font-size: 48px; font-weight: bold; color: var(--status-success); margin: 15px 0;">
             86.5%
           </div>
