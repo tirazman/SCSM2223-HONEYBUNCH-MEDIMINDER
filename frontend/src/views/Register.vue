@@ -129,18 +129,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 import { useAuth } from '../stores/auth'
 
 const router = useRouter()
 const auth = useAuth()
 
-const API_BASE = 'http://localhost:8000/api'
-
-// View State Controller
 const currentView = ref('role-view')
-
-// Form Data Refs
 const fullName = ref('')
 const email = ref('')
 const password = ref('')
@@ -148,20 +142,11 @@ const dob = ref('')
 const clinicName = ref('')
 const linkCaregiver = ref(false)
 const caregiverEmail = ref('')
-
-// Summary Retention Refs
 const registeredRole = ref('')
-const confirmedData = ref({
-  name: '',
-  email: '',
-  clinic: '',
-  linkedEmail: ''
-})
+const confirmedData = ref({ name: '', email: '', clinic: '', linkedEmail: '' })
 
-// Navigate between forms and clear inputs
 function showForm(viewId) {
   currentView.value = viewId
-
   fullName.value = ''
   email.value = ''
   password.value = ''
@@ -171,78 +156,56 @@ function showForm(viewId) {
   caregiverEmail.value = ''
 }
 
-// Unified Registration Handler - calls the real Slim backend
 async function handleRegister(role) {
-  // Base Validation
   if (!fullName.value || !email.value || !password.value) {
-    alert('🚨 All standard fields are required before submitting!')
+    alert('All standard fields are required before submitting!')
     return
   }
-
-  // Admin Specific Validation
   if (role === 'Admin' && !clinicName.value) {
-    alert('🚨 Clinic/Facility name is required for Admin registration.')
+    alert('Clinic/Facility name is required for Admin registration.')
     return
   }
-
-  // Patient + Linked Caregiver Validation
   if (role === 'Patient' && linkCaregiver.value && !caregiverEmail.value) {
-    alert('🚨 Please provide the caregiver email address to establish the link.')
+    alert('Please provide the caregiver email address.')
     return
   }
 
-  // Backend expects lowercase role values: patient, caregiver, admin
-  const backendRole = role.toLowerCase()
+  // ── Use the store action instead of a direct axios.post ──────────────
+  const result = await auth.register(
+    fullName.value,
+    email.value,
+    password.value,
+    dob.value || null,
+    role.toLowerCase()
+  )
 
-  try {
-    const response = await axios.post(`${API_BASE}/auth/register`, {
-      name: fullName.value,
-      email: email.value,
-      password: password.value,
-      role: backendRole,
-      dob: dob.value || null
-    })
-
-    const { token, user } = response.data
-
-    let linkedEmailForDisplay = ''
-    if (role === 'Patient' && linkCaregiver.value) {
-      try {
-        await axios.post(
-          `${API_BASE}/patient-caregiver`,
-          { caregiver_email: caregiverEmail.value },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        linkedEmailForDisplay = caregiverEmail.value
-      } catch (linkError) {
-        console.error('Caregiver linking failed:', linkError.response?.data?.error || linkError.message)
-        alert('Account created, but linking the caregiver failed: ' + (linkError.response?.data?.error || 'unknown error') + '. You can link them later.')
-      }
-    }
-
-    // Log the new user in automatically so they land on their dashboard ready to go
-    auth.token = token
-    auth.user = user
-    auth.isAuthenticated = true
-
-    registeredRole.value = role
-    confirmedData.value = {
-      name: fullName.value,
-      email: email.value,
-      clinic: clinicName.value,
-      linkedEmail: linkedEmailForDisplay
-    }
-
-    currentView.value = 'confirm-view'
-  } catch (error) {
-    const errMsg = error.response?.data?.error
-      || Object.values(error.response?.data?.errors || {}).join(', ')
-      || error.message
-    alert(`🚨 Registration failed: ${errMsg}`)
+  if (!result.success) {
+    alert(`Registration failed: ${result.error}`)
+    return
   }
+
+  // ── Caregiver linking (uses store token, not a local variable) ────────
+  let linkedEmailForDisplay = ''
+  if (role === 'Patient' && linkCaregiver.value) {
+    const linkResult = await auth.linkCaregiver(caregiverEmail.value)
+    if (!linkResult.success) {
+      alert('Account created, but caregiver linking failed: ' + linkResult.error + '. You can link them later.')
+    } else {
+      linkedEmailForDisplay = caregiverEmail.value
+    }
+  }
+
+  registeredRole.value = role
+  confirmedData.value = {
+    name: fullName.value,
+    email: email.value,
+    clinic: clinicName.value,
+    linkedEmail: linkedEmailForDisplay
+  }
+
+  currentView.value = 'confirm-view'
 }
 
-// Securely route back to the Login Dashboard route endpoint
 function goToLogin() {
   router.push('/login')
 }
