@@ -20,11 +20,20 @@
       <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #111827;">Write New Patient Prescription</h2>
       <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280;">Compile validated medication records directly into the patient logging stream.</p>
       
+      <div 
+        v-if="interactionWarning" 
+        style="background-color: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 6px; margin-bottom: 20px;"
+      >
+        <p style="color: #b45309; margin: 0; font-weight: bold; font-size: 14px;">
+          ⚠️ Drug Interaction Warning: {{ interactionWarning }}
+        </p>
+      </div>
+
       <form @submit.prevent="handlePrescriptionSubmit">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
           <div>
             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Target Patient Profile</label>
-            <select v-model="patientProfile" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background-color: #f9fafb;">
+            <select v-model="patientProfile" @change="checkDrugInteractions" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background-color: #f9fafb;">
               <option value="">-- Select Patient Profile Record --</option>
               <option value="Encik Ahmad Bin Ali">Encik Ahmad Bin Ali (ahmad58@gmail.com)</option>
               <option value="Puan Haida Binti Kamal">Puan Haida Binti Kamal (haidakamal@gmail.com)</option>
@@ -33,7 +42,7 @@
 
           <div>
             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Medication Catalog Item</label>
-            <input type="text" v-model="medName" placeholder="e.g., Metformin HCL" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background-color: #f9fafb;">
+            <input type="text" v-model="medName" @input="checkDrugInteractions" placeholder="e.g., Metformin HCL" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background-color: #f9fafb;">
           </div>
         </div>
 
@@ -68,10 +77,8 @@
     </div>
 
     <div style="display: grid; grid-template-columns: 2.5fr 1fr; gap: 25px; align-items: start;">
-      
       <div style="background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
         <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #111827;">System Prescription Registry</h2>
-        
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
           <thead>
             <tr style="background-color: #f9fafb; border-bottom: 2px solid #e5e7eb; color: #4b5563; font-weight: 600;">
@@ -91,11 +98,9 @@
             <tr v-for="(presc, index) in sortedPrescriptions" :key="index" style="border-bottom: 1px solid #f3f4f6; color: #374151;"
                 onmouseover="this.style.backgroundColor='#f9fafb'"
                 onmouseout="this.style.backgroundColor='transparent'">
-              
               <td style="padding: 14px 16px; font-weight: 600; color: #111827;">
                 {{ shouldDisplayName(index) ? presc.patient : '' }}
               </td>
-              
               <td style="padding: 14px 16px;">{{ presc.name }}</td>
               <td style="padding: 14px 16px; color: #6b7280;">{{ presc.form }}</td>
               <td style="padding: 14px 16px; font-variant-numeric: tabular-nums;">{{ presc.strength }}</td>
@@ -107,11 +112,9 @@
 
       <div style="background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
         <h2 style="margin: 0 0 6px 0; font-size: 16px; color: #111827;">System Health Metrics</h2>
-        
         <div v-if="isLoading" style="padding: 15px 0; font-size: 13px; font-style: italic; color: #9ca3af; text-align: center;">
           Syncing directory state modules...
         </div>
-        
         <table v-else style="font-size: 13px; width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="border-bottom: 2px solid #e5e7eb; color: #4b5563; font-weight: 600; text-align: left;">
@@ -135,30 +138,35 @@
           </tbody>
         </table>
       </div>
-
     </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-// Interface display control flags
 const showForm = ref(false)
-
-// Input text bounding parameters
 const patientProfile = ref('')
 const medName = ref('')
 const medForm = ref('Tablet')
 const strength = ref('')
 const frequency = ref('')
 
-// Pre-populated structured arrays mimicking active SQL table row outputs
+// 🚨 NEW: Real-time alert state manager string
+const interactionWarning = ref('')
+
 const prescriptions = ref([
   { patient: 'Encik Ahmad Bin Ali', name: 'Metformin HCL', form: 'Capsule', strength: '500mg', frequency: '2' },
   { patient: 'Puan Haida Binti Kamal', name: 'Insulin Glargine', form: 'Injection', strength: '10ml', frequency: '1' }
 ])
 const isLoading = ref(true)
+
+// 🚨 NEW: Static drug high-risk evaluation matching mapping index
+const dangerousPairs = {
+  'Encik Ahmad Bin Ali': { conflictingDrug: 'Contrast Dye', message: 'Metformin combined with Contrast Dye can lead to acute renal failure risks!' },
+  'Puan Haida Binti Kamal': { conflictingDrug: 'Aspirin', message: 'Insulin paired with high doses of Aspirin might dangerously amplify hypoglycemic events.' }
+}
 
 onMounted(() => {
   setTimeout(() => {
@@ -166,7 +174,6 @@ onMounted(() => {
   }, 500)
 })
 
-// Computed property to sort items by patient name 
 const sortedPrescriptions = computed(() => {
   return [...prescriptions.value].sort((a, b) => a.patient.localeCompare(b.patient))
 })
@@ -176,26 +183,44 @@ function shouldDisplayName(index) {
   return sortedPrescriptions.value[index].patient !== sortedPrescriptions.value[index - 1].patient
 }
 
+// 🚨 NEW: Real-time sub-string text pattern lookup algorithm
+function checkDrugInteractions() {
+  interactionWarning.value = ''
+  if (!patientProfile.value || !medName.value) return
+
+  const record = dangerousPairs[patientProfile.value]
+  if (record) {
+    const typedDrug = medName.value.toLowerCase().trim()
+    const forbiddenDrug = record.conflictingDrug.toLowerCase()
+    
+    if (typedDrug.includes(forbiddenDrug) && typedDrug.length > 0) {
+      interactionWarning.value = record.message
+    }
+  }
+}
+
 function handlePrescriptionSubmit() {
-  // 🛡️ 1. Trim whitespace to prevent blank-space bypasses
   const trimmedMedName = medName.value.trim();
   const trimmedStrength = strength.value.trim();
   const trimmedFrequency = frequency.value.trim();
 
-  // 🛡️ 2. Mandatory field presence assertion
   if (!patientProfile.value || !trimmedMedName || !trimmedStrength || !trimmedFrequency) {
     alert('🚨 Form Validation Error: All fields must be filled out before submitting records!');
     return
   }
 
-  // 🛡️ 3. Strict type integrity rule: Must be a positive integer number
   const numericFrequency = Number(trimmedFrequency);
   if (isNaN(numericFrequency) || numericFrequency <= 0 || !Number.isInteger(numericFrequency)) {
     alert('🚨 Data Format Error: Daily frequency must be a valid positive whole number entry!');
     return
   }
 
-  // Push validated data payload object into array schema state
+  // 🚨 NEW: Absolute hard-stop intercept boundary if warning banner is up
+  if (interactionWarning.value) {
+    alert(`🚨 Clinical Hold: Cannot commit prescription. ${interactionWarning.value}`)
+    return
+  }
+
   prescriptions.value.push({
     patient: patientProfile.value,
     name: trimmedMedName,
@@ -206,14 +231,12 @@ function handlePrescriptionSubmit() {
 
   alert(`✓ Success! Prescription for "${trimmedMedName}" is structured safely and appended to the tracking table.`)
 
-  // Flush states instantly to reset system views
   patientProfile.value = ''
   medName.value = ''
   medForm.value = 'Tablet'
   strength.value = ''
   frequency.value = ''
-  
-  // Minimize input drawer panel upon completion
+  interactionWarning.value = ''
   showForm.value = false
 }
 </script>
