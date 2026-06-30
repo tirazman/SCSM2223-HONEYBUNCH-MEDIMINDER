@@ -6,6 +6,7 @@ import Admin from '../views/Admin.vue'
 import Patient from '../views/Patient.vue'   
 import Caregiver from '../views/Caregiver.vue'
 
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
