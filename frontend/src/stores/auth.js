@@ -47,7 +47,7 @@ export const useAuth = defineStore('auth', {
     },
     async login(email, password, role) {
       try {
-        const response = await axios.post(`${API_BASE}/auth/login`, {
+        const response = await axios.post(`${API_BASE}/api/auth/login`, {
           email,
           password,
           role
@@ -74,7 +74,7 @@ export const useAuth = defineStore('auth', {
     async updateProfile(payload) {
       try {
         const response = await axios.put(
-          `${API_BASE}/auth/profile`,
+          `${API_BASE}/api/auth/profile`,
           payload,
           {
             headers: {
