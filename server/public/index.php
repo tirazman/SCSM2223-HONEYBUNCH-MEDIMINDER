@@ -47,10 +47,10 @@ $app->get('/api/health', function (Request $request, Response $response) {
 });
 
 // ---- Auth routes (public) ----
-$app->post('/auth/login', [AuthController::class, 'login']);
-$app->post('/auth/register', [AuthController::class, 'register']);
-$app->get('/auth/me', [AuthController::class, 'me'])->add(new JWTMiddleware());
-$app->put('/auth/profile', [AuthController::class, 'updateProfile'])->add(new JWTMiddleware());
+$app->post('/api/auth/login', [AuthController::class, 'login']);
+$app->post('/api/auth/register', [AuthController::class, 'register']);
+$app->get('/api/auth/me', [AuthController::class, 'me'])->add(new JWTMiddleware());
+$app->put('/api/auth/profile', [AuthController::class, 'updateProfile'])->add(new JWTMiddleware());
 
 // ---- Admin user lookups ----
 $app->get('/api/admin/patients', [AuthController::class, 'listPatients'])->add(new JWTMiddleware(['admin']));
