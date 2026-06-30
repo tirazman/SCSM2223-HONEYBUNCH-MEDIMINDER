@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import Register from '../views/Register.vue'
 import Login from '../views/Login.vue'
-import Admin from '../views/Admin.vue'
-import Patient from '../views/Patient.vue'
+import Admin from '../views/Admin.vue'      
+import Patient from '../views/Patient.vue'   
 import Caregiver from '../views/Caregiver.vue'
 
 const router = createRouter({
