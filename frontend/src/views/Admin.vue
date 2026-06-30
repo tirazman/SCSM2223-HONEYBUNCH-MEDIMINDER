@@ -177,28 +177,34 @@ function shouldDisplayName(index) {
 }
 
 function handlePrescriptionSubmit() {
-  // 1. Mandatory data field integrity assertion
-  if (!patientProfile.value || !medName.value || !strength.value || !frequency.value) {
-    alert('🚨 Validation Alert: Please fill out all fields before committing to the database layout!')
+  // 🛡️ 1. Trim whitespace to prevent blank-space bypasses
+  const trimmedMedName = medName.value.trim();
+  const trimmedStrength = strength.value.trim();
+  const trimmedFrequency = frequency.value.trim();
+
+  // 🛡️ 2. Mandatory field presence assertion
+  if (!patientProfile.value || !trimmedMedName || !trimmedStrength || !trimmedFrequency) {
+    alert('🚨 Form Validation Error: All fields must be filled out before submitting records!');
     return
   }
 
-  // 2. Numerical evaluation constraint rule
-  if (isNaN(frequency.value)) {
-    alert('🚨 Data Integrity Error: Frequency value must be a valid number entry!')
+  // 🛡️ 3. Strict type integrity rule: Must be a positive integer number
+  const numericFrequency = Number(trimmedFrequency);
+  if (isNaN(numericFrequency) || numericFrequency <= 0 || !Number.isInteger(numericFrequency)) {
+    alert('🚨 Data Format Error: Daily frequency must be a valid positive whole number entry!');
     return
   }
 
-  // Push new state object parameters into array schema
+  // Push validated data payload object into array schema state
   prescriptions.value.push({
     patient: patientProfile.value,
-    name: medName.value,
+    name: trimmedMedName,
     form: medForm.value,
-    strength: strength.value,
-    frequency: frequency.value
+    strength: trimmedStrength,
+    frequency: trimmedFrequency
   })
 
-  alert(`✓ Success! Prescription for "${medName.value}" is structured safely and appended to the tracking table.`)
+  alert(`✓ Success! Prescription for "${trimmedMedName}" is structured safely and appended to the tracking table.`)
 
   // Flush states instantly to reset system views
   patientProfile.value = ''
@@ -207,7 +213,7 @@ function handlePrescriptionSubmit() {
   strength.value = ''
   frequency.value = ''
   
-  // Minimize input drawer console panel upon completion
+  // Minimize input drawer panel upon completion
   showForm.value = false
 }
 </script>

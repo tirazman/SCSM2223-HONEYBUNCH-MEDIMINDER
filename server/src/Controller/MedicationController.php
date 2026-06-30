@@ -27,6 +27,7 @@ class MedicationController
         $medication = $this->medications->findById((int) $args['id']);
 
         if (!$medication) {
+            $response->withStatus(404);
             return $this->jsonResponse($response, ['error' => 'Medication not found'], 404);
         }
 
@@ -37,22 +38,31 @@ class MedicationController
     {
         $data = (array) $request->getParsedBody();
 
+        // 🛡️ 1. Double-Check Form Input Presence Validation
         $validator = new Validator();
-        $validator->required($data, ['name']);
+        $validator->required($data, ['name', 'form', 'strength', 'default_unit']);
 
         if ($validator->fails()) {
             return $this->jsonResponse($response, ['errors' => $validator->getErrors()], 422);
         }
 
+        // 🛡️ 2. Strict Type Integrity Check: Ensure unit/frequency is a positive integer
+        $unitValue = $data['default_unit'];
+        if (!is_numeric($unitValue) || intval($unitValue) <= 0) {
+            return $this->jsonResponse($response, [
+                'error' => 'Data Format Failure',
+                'message' => 'Default unit or frequency metrics must be a positive whole number entry!'
+            ], 422);
+        }
+
         $id = $this->medications->create(
             trim($data['name']),
-            $data['form'] ?? null,
-            $data['strength'] ?? null,
-            $data['default_unit'] ?? null
+            trim($data['form']),
+            trim($data['strength']),
+            intval($unitValue)
         );
 
         $medication = $this->medications->findById($id);
-
         return $this->jsonResponse($response, ['medication' => $medication], 201);
     }
 
@@ -65,23 +75,32 @@ class MedicationController
             return $this->jsonResponse($response, ['error' => 'Medication not found'], 404);
         }
 
+        // 🛡️ 1. Double-Check Form Input Presence Validation
         $validator = new Validator();
-        $validator->required($data, ['name']);
+        $validator->required($data, ['name', 'form', 'strength', 'default_unit']);
 
         if ($validator->fails()) {
             return $this->jsonResponse($response, ['errors' => $validator->getErrors()], 422);
         }
 
+        // 🛡️ 2. Strict Type Integrity Check: Ensure unit/frequency is a positive integer
+        $unitValue = $data['default_unit'];
+        if (!is_numeric($unitValue) || intval($unitValue) <= 0) {
+            return $this->jsonResponse($response, [
+                'error' => 'Data Format Failure',
+                'message' => 'Default unit or frequency metrics must be a positive whole number entry!'
+            ], 422);
+        }
+
         $this->medications->update(
             $id,
             trim($data['name']),
-            $data['form'] ?? null,
-            $data['strength'] ?? null,
-            $data['default_unit'] ?? null
+            trim($data['form']),
+            trim($data['strength']),
+            intval($unitValue)
         );
 
         $medication = $this->medications->findById($id);
-
         return $this->jsonResponse($response, ['medication' => $medication], 200);
     }
 
@@ -94,7 +113,6 @@ class MedicationController
         }
 
         $this->medications->delete($id);
-
         return $this->jsonResponse($response, ['message' => 'Medication deleted'], 200);
     }
 
