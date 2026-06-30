@@ -22,6 +22,13 @@ $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
 $app->add(function (Request $request, $handler) {
+    if ($request->getMethod() === 'OPTIONS') {
+        $response = new \Slim\Psr7\Response();
+    } else {
+        // Otherwise, let the application process the route normally
+        $response = $handler->handle($request);
+    }
+    
     $response = $handler->handle($request);
     return $response
         ->withHeader('Access-Control-Allow-Origin', '*')
