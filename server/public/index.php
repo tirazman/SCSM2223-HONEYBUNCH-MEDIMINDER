@@ -40,6 +40,9 @@ $app->post('/api/auth/login', [AuthController::class, 'login']);
 $app->post('/api/auth/register', [AuthController::class, 'register']);
 $app->get('/api/auth/me', [AuthController::class, 'me'])->add(new JWTMiddleware());
 
+// ---- Admin user lookups ----
+$app->get('/api/admin/patients', [AuthController::class, 'listPatients'])->add(new JWTMiddleware(['admin']));
+
 // ---- Medication routes ----
 $app->get('/api/medications', [MedicationController::class, 'index'])->add(new JWTMiddleware());
 $app->get('/api/medications/{id}', [MedicationController::class, 'show'])->add(new JWTMiddleware());
