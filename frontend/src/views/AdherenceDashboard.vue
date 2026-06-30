@@ -1,44 +1,41 @@
 <template>
-  <div class="container" style="max-width: 700px; margin: 20px auto; font-family: system-ui, -apple-system, sans-serif;">
-    <div class="card" style="background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
-      <h2 style="margin: 0 0 20px 0; color: #1f2937;">Adherence Summary</h2>
+  <div class="container" style="max-width: 700px;">
+    <div class="card">
+      <h2>Adherence Summary</h2>
+      <p>Generate a clinic-ready export of medication adherence for a chosen date range.</p>
 
       <!-- Caregiver/Admin must pick which patient they're viewing -->
-      <div v-if="auth.getUserRole !== 'patient'" style="margin-bottom: 20px;">
-        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Patient</label>
-        <select v-model="selectedPatientId" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-          <option :value="null" disabled>Select a patient</option>
+      <div v-if="auth.getUserRole !== 'patient'" class="form-group">
+        <label for="patient-select">Patient</label>
+        <select id="patient-select" v-model="selectedPatientId" :disabled="isLoadingPatients">
+          <option :value="null" disabled>{{ isLoadingPatients ? 'Loading patients…' : 'Select a patient' }}</option>
           <option v-for="p in patients" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
       </div>
 
-      <!-- Optional date range -->
-      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <div style="flex: 1;">
-          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">From</label>
-          <input v-model="fromDate" type="date" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+      <!-- Date range filter -->
+      <div style="display: flex; gap: 16px;">
+        <div class="form-group" style="flex: 1;">
+          <label for="from-date">From</label>
+          <input id="from-date" v-model="fromDate" type="date" :max="toDate || undefined" />
         </div>
-        <div style="flex: 1;">
-          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">To</label>
-          <input v-model="toDate" type="date" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+        <div class="form-group" style="flex: 1;">
+          <label for="to-date">To</label>
+          <input id="to-date" v-model="toDate" type="date" :min="fromDate || undefined" />
         </div>
       </div>
 
+      <p v-if="!canExport" style="color: var(--status-danger); font-size: 13px; margin-top: -8px;">
+        Select a patient before exporting.
+      </p>
+
       <!-- Export buttons -->
-      <div style="display: flex; gap: 10px;">
-        <button
-          @click="exportAdherence('csv')"
-          :disabled="isExporting || !canExport"
-          style="flex: 1; padding: 10px; font-weight: 600; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer;"
-        >
-          {{ isExporting === 'csv' ? 'Exporting…' : 'Export CSV' }}
+      <div class="button-group" style="margin-top: 10px;">
+        <button class="btn-success" :disabled="!!isExporting || !canExport" @click="exportAdherence('csv')">
+          {{ isExporting === 'csv' ? 'Exporting…' : '⬇ Export CSV' }}
         </button>
-        <button
-          @click="exportAdherence('pdf')"
-          :disabled="isExporting || !canExport"
-          style="flex: 1; padding: 10px; font-weight: 600; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;"
-        >
-          {{ isExporting === 'pdf' ? 'Exporting…' : 'Export PDF' }}
+        <button class="btn-danger" :disabled="!!isExporting || !canExport" @click="exportAdherence('pdf')">
+          {{ isExporting === 'pdf' ? 'Exporting…' : '⬇ Export PDF' }}
         </button>
       </div>
     </div>
@@ -52,12 +49,14 @@ import { useAuth } from '../stores/auth'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 
+const API_BASE = 'http://localhost:8000/api'
+
 const route = useRoute()
 const auth = useAuth()
 const toast = useToast()
-const API_BASE = 'http://localhost:8000/api'
 
 const patients = ref([])
+const isLoadingPatients = ref(false)
 const selectedPatientId = ref(null)
 const fromDate = ref('')
 const toDate = ref('')
@@ -69,20 +68,24 @@ const canExport = computed(() => {
 })
 
 onMounted(async () => {
-    if (route.query.patient_id) {
-    selectedPatientId.value = parseInt(route.query.patient_id)
+  if (route.query.patient_id) {
+    selectedPatientId.value = parseInt(route.query.patient_id, 10)
   }
-    if (auth.getUserRole === 'caregiver') {
-        const res = await axios.get(`${API_BASE}/caregiver/patients`, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-        })
-        patients.value = res.data.patients ?? res.data
-    } else if (auth.getUserRole === 'admin') {
-        const res = await axios.get(`${API_BASE}/admin/patients`, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-        })
-        patients.value = res.data.patients ?? res.data
+
+  if (auth.getUserRole === 'caregiver' || auth.getUserRole === 'admin') {
+    isLoadingPatients.value = true
+    try {
+      const endpoint = auth.getUserRole === 'caregiver' ? 'caregiver/patients' : 'admin/patients'
+      const res = await axios.get(`${API_BASE}/${endpoint}`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      })
+      patients.value = res.data.patients ?? res.data
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to load patient list')
+    } finally {
+      isLoadingPatients.value = false
     }
+  }
 })
 
 async function exportAdherence(format) {
@@ -99,11 +102,11 @@ async function exportAdherence(format) {
     const response = await axios.get(`${API_BASE}/dose-logs/export/${format}`, {
       params,
       headers: { Authorization: `Bearer ${auth.token}` },
-      responseType: 'blob',
+      responseType: 'blob'
     })
 
     const blob = new Blob([response.data], {
-      type: format === 'pdf' ? 'application/pdf' : 'text/csv',
+      type: format === 'pdf' ? 'application/pdf' : 'text/csv'
     })
 
     const url = window.URL.createObjectURL(blob)

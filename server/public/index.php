@@ -39,6 +39,7 @@ $app->get('/api/health', function (Request $request, Response $response) {
 $app->post('/api/auth/login', [AuthController::class, 'login']);
 $app->post('/api/auth/register', [AuthController::class, 'register']);
 $app->get('/api/auth/me', [AuthController::class, 'me'])->add(new JWTMiddleware());
+$app->put('/api/auth/profile', [AuthController::class, 'updateProfile'])->add(new JWTMiddleware());
 
 // ---- Admin user lookups ----
 $app->get('/api/admin/patients', [AuthController::class, 'listPatients'])->add(new JWTMiddleware(['admin']));
@@ -63,7 +64,6 @@ $app->get('/api/dose-logs/adherence', [DoseLogController::class, 'adherence'])->
 $app->post('/api/dose-logs', [DoseLogController::class, 'store'])->add(new JWTMiddleware(['caregiver', 'admin']));
 $app->put('/api/dose-logs/{id}/status', [DoseLogController::class, 'updateStatus'])->add(new JWTMiddleware());
 $app->delete('/api/dose-logs/{id}', [DoseLogController::class, 'destroy'])->add(new JWTMiddleware(['caregiver', 'admin']));
-$app->get('/api/dose-logs/export/{format}', [DoseLogController::class, 'export'])->add(new JWTMiddleware());
 
 // ---- PatientCaregiver routes ----
 $app->get('/api/caregiver/patients', [PatientCaregiverController::class, 'myPatients'])->add(new JWTMiddleware(['caregiver']));
