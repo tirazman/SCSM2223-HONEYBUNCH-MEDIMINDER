@@ -4,9 +4,21 @@ const app = express();
 
 // ── CORS configuration ────────────────────────────────────────────────
 app.use(cors({
-  origin: [
-    'https://scsm-2223-honeybunch-mediminder.vercel.app',  
-  ],
+  origin: (origin, callback) => {
+    console.log('[CORS] Request from:', origin)
+
+    const allowed =
+      !origin ||                                    // Postman / mobile / server
+      origin.endsWith('.vercel.app') ||             // all Vercel preview + production URLs
+      origin === 'http://localhost:5173'            // local dev
+
+    if (allowed) {
+      callback(null, true)
+    } else {
+      console.warn('[CORS] Blocked:', origin)
+      callback(new Error(`CORS blocked: ${origin}`))
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -15,7 +27,7 @@ app.use(cors({
 app.options('*', cors());
 app.use(express.json());
 
-// Endpoint to fetch patient dashboard data along with stock thresholds
+// ── Your existing routes unchanged ───────────────────────────────────
 app.get('/api/patient/dashboard/:id', (req, res) => {
   const patientId = req.params.id;
 
