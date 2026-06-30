@@ -32,6 +32,11 @@
           <input v-model="password" type="password" placeholder="Create a password" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
         </div>
 
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Date of Birth</label>
+          <input v-model="dob" type="date" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+        </div>
+
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
           <input type="checkbox" id="link-caregiver" v-model="linkCaregiver">
           <label for="link-caregiver" style="margin: 0; font-size: 14px; font-weight: 600; color: #374151;">Link a Caregiver</label>
@@ -139,6 +144,7 @@ const currentView = ref('role-view')
 const fullName = ref('')
 const email = ref('')
 const password = ref('')
+const dob = ref('')
 const clinicName = ref('')
 const linkCaregiver = ref(false)
 const caregiverEmail = ref('')
@@ -159,6 +165,7 @@ function showForm(viewId) {
   fullName.value = ''
   email.value = ''
   password.value = ''
+  dob.value = ''
   clinicName.value = ''
   linkCaregiver.value = false
   caregiverEmail.value = ''
@@ -192,7 +199,8 @@ async function handleRegister(role) {
       name: fullName.value,
       email: email.value,
       password: password.value,
-      role: backendRole
+      role: backendRole,
+      dob: dob.value
     })
 
     const { token, user } = response.data
