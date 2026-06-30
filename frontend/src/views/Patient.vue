@@ -6,6 +6,19 @@
       <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">Your active medical prescription schedule synchronized from database layers.</p>
     </header>
 
+    <div 
+      v-if="hasLowStockMedication" 
+      style="background-color: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; border-left: 5px solid #d97706;"
+    >
+      <div style="font-size: 22px;">⚠️</div>
+      <div>
+        <strong style="color: #92400e; display: block; font-size: 15px; font-weight: 700;">Refill Action Required</strong>
+        <p style="margin: 2px 0 0 0; font-size: 13px; color: #78350f;">
+          Warning: One or more of your active medical prescriptions has fallen below the safety stock threshold (10 units remaining). Please contact clinic administration or your linked caregiver for a supply update.
+        </p>
+      </div>
+    </div>
+
     <div style="display: grid; grid-template-columns: 2.5fr 1fr; gap: 25px; align-items: start;">
 
       <div>
@@ -36,8 +49,9 @@
               <p style="margin: 5px 0 0 0; font-size: 14px; color: #374151;">
                 <strong>Dose / Strength:</strong> {{ med.strength || med.dose || 'N/A' }} | ⏰ {{ med.frequency }}x Daily
               </p>
-              <p style="margin: 5px 0 0 0; font-size: 13px; color: #6b7280;">
-                Notes: Enforced structural adherence rules active.
+              <p style="margin: 3px 0 0 0; font-size: 13px; color: #4b5563;">
+                <strong>Remaining Inventory Stock:</strong> 
+                <strong :style="med.current_stock < 10 ? 'color: #dc2626;' : 'color: #059669;'">{{ med.current_stock !== undefined && med.current_stock !== null ? med.current_stock : 30 }} units</strong>
               </p>
             </div>
 
@@ -89,7 +103,7 @@
             86.5%
           </div>
           <p style="margin: 0; font-size: 13px; color: #6b7280;">Great progress! You missed only 2 doses this past week.</p>
-          <router-link to="/adherence" class="btn-success" style="display: inline-block; margin-top: 10px; padding: 8px 15px; text-decoration: none;">
+          <router-link to="/adherence" class="btn-success" style="display: inline-block; margin-top: 10px; padding: 8px 15px; text-decoration: none; font-size: 13px; font-weight: 600; background-color: #10b981; color: white; border-radius: 6px;">
             📊 Export My Report
           </router-link>
         </div>
@@ -118,14 +132,19 @@ const loggedInPatient = ref('Encik Ahmad Bin Ali')
 const prescriptions = ref([])
 const isLoading = ref(true)
 
+// 🔍 Stock alert threshold configuration metric
+const STOCK_THRESHOLD = 10
+
 const loadPrescriptions = () => {
   const saved = localStorage.getItem('global_prescriptions')
   if (saved) {
     prescriptions.value = JSON.parse(saved)
   } else {
+    // Injected current_stock keys to match database tables seamlessly
     prescriptions.value = [
-      { patient: 'Encik Ahmad Bin Ali', name: 'Metformin HCL', form: 'Capsule', strength: '500mg', frequency: '2', status: null },
-      { patient: 'Puan Haida Binti Kamal', name: 'Insulin Glargine', form: 'Injection', strength: '10ml', frequency: '1', status: null }
+      { patient: 'Encik Ahmad Bin Ali', name: 'Metformin HCL', form: 'Capsule', strength: '500mg', frequency: '2', status: null, current_stock: 6 }, // ⚠️ Under threshold!
+      { patient: 'Encik Ahmad Bin Ali', name: 'Paracetamol', form: 'Tablet', strength: '500mg', frequency: '3', status: null, current_stock: 32 },
+      { patient: 'Puan Haida Binti Kamal', name: 'Insulin Glargine', form: 'Injection', strength: '10ml', frequency: '1', status: null, current_stock: 4 }
     ]
     localStorage.setItem('global_prescriptions', JSON.stringify(prescriptions.value))
   }
@@ -142,10 +161,21 @@ const myPrescriptions = computed(() => {
   return prescriptions.value.filter(p => p.patient === loggedInPatient.value)
 })
 
+// ⚡ Dynamic Computed Property checking inventory bounds to render the reminder
+const hasLowStockMedication = computed(() => {
+  return myPrescriptions.value.some(med => med.current_stock < STOCK_THRESHOLD)
+})
+
 function logDose(index, statusStr) {
   const targetMed = myPrescriptions.value[index]
   if (targetMed) {
     targetMed.status = statusStr
+    
+    // Deduct stock balance tracking cleanly when marked as taken
+    if (statusStr === 'taken' && targetMed.current_stock > 0) {
+      targetMed.current_stock -= 1
+    }
+    
     localStorage.setItem('global_prescriptions', JSON.stringify(prescriptions.value))
   }
 }
