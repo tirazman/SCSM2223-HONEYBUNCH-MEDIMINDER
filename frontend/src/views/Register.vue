@@ -200,7 +200,7 @@ async function handleRegister(role) {
       email: email.value,
       password: password.value,
       role: backendRole,
-      dob: dob.value
+      dob: dob.value || null
     })
 
     const { token, user } = response.data

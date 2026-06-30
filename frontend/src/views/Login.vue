@@ -3,6 +3,10 @@
     <div class="card" style="text-align: center;">
       <h2>Secure Login</h2>
 
+      <div v-if="errorMessage" style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #ef9a9a;">
+        {{ errorMessage }}
+      </div>
+
       <form @submit.prevent="handleLogin" style="text-align: left; margin-top: 20px;">
         <div style="margin-bottom: 15px;">
           <label style="display: block; margin-bottom: 5px; font-weight: bold;">Email Address</label>
@@ -33,11 +37,15 @@
           </select>
         </div>
 
-        <button type="submit" class="btn-success" style="width: 100%; padding: 10px; font-weight: bold; margin-bottom: 15px;">
-          Secure Login
+        <button 
+          type="submit" 
+          :disabled="isLoading" 
+          class="btn-success" 
+          style="width: 100%; padding: 10px; font-weight: bold; margin-bottom: 15px; cursor: pointer;">
+          {{ isLoading ? 'Logging in...' : 'Secure Login' }}
         </button>
+      
       </form>
-
       <p style="margin-top: 15px; font-size: 0.95rem; color: #555; text-align: left;">
         New to MediMinder? 
         <router-link to="/register" style="color: #673ab7; font-weight: bold; text-decoration: underline; cursor: pointer;">
@@ -59,19 +67,28 @@ const auth = useAuth()
 const email = ref('')
 const password = ref('')
 const role = ref('patient')
+const errorMessage = ref('')
+
+const isLoading = ref(false)
 
 async function handleLogin() {
+  errorMessage.value = ''
+ 
   if (!email.value || !password.value) {
-    alert('🚨 Email and password fields cannot be empty!')
+    errorMessage.value = 'Email and password fields cannot be empty!'
     return
   }
 
-  const success = await auth.login(email.value, password.value)
+   isLoading.value = true // Start loading
 
-  if (success) {
+  const result = await auth.login(email.value, password.value, role.value)
+
+  isLoading.value = false // Stop loading
+
+  if (result.success) {
     router.push(`/${auth.getUserRole}`)
   } else {
-    alert('🚨 Invalid email or password.')
+    errorMessage.value = result.error || 'Invalid email or password.'
     password.value = ''
   }
 }

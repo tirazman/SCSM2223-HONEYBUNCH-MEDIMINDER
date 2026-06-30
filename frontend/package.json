@@ -17,11 +17,13 @@
   "main": "./lib/index.js",
   "dependencies": {
     "@babel/helper-validator-identifier": "^7.29.7",
+    "@capacitor/local-notifications": "^8.2.0",
     "axios": "^1.18.1",
     "js-tokens": "^4.0.0",
     "picocolors": "^1.1.1",
     "pinia": "^3.0.4",
-    "vue-router": "^5.1.0"
+    "vue-router": "^5.1.0",
+    "vue-toastification": "^2.0.0-rc.5"
   },
   "scripts": {
     "dev": "vite",
@@ -29,6 +31,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.1",
     "@vitejs/plugin-vue": "^6.0.7",
     "charcodes": "^0.2.0",
     "import-meta-resolve": "^4.1.0",

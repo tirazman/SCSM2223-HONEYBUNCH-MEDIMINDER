@@ -20,34 +20,38 @@ class AuthController
     }
 
     public function login(Request $request, Response $response): Response
-    {
-        $data = (array) $request->getParsedBody();
+{
+    $data = (array) $request->getParsedBody();
 
-        $validator = new Validator();
-        $validator->required($data, ['email', 'password']);
+    $validator = new Validator();
+    $validator->required($data, ['email', 'password', 'role']);
 
-        if ($validator->fails()) {
-            return $this->jsonResponse($response, ['errors' => $validator->getErrors()], 422);
-        }
-
-        $user = $this->users->findByEmail(trim($data['email']));
-
-        if (!$user || !password_verify($data['password'], $user['password_hash'])) {
-            return $this->jsonResponse($response, ['error' => 'Invalid email or password'], 401);
-        }
-
-        $token = $this->jwt->generateToken((int) $user['id'], $user['role']);
-
-        return $this->jsonResponse($response, [
-            'token' => $token,
-            'user' => [
-                'id' => $user['id'],
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'role' => $user['role'],
-            ],
-        ], 200);
+    if ($validator->fails()) {
+        return $this->jsonResponse($response, ['errors' => $validator->getErrors()], 422);
     }
+
+    $user = $this->users->findByEmail(trim($data['email']));
+
+    if (!$user || !password_verify($data['password'], $user['password_hash'])) {
+        return $this->jsonResponse($response, ['error' => 'Invalid email or password'], 401);
+    }
+
+    if ($user['role'] !== $data['role']) {
+        return $this->jsonResponse($response, ['error' => 'Unauthorized role for this account'], 403);
+    }
+
+    $token = $this->jwt->generateToken((int) $user['id'], $user['role']);
+
+    return $this->jsonResponse($response, [
+        'token' => $token,
+        'user' => [
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'role' => $user['role'],
+        ],
+    ], 200);
+}
 
     public function register(Request $request, Response $response): Response
     {
@@ -68,13 +72,14 @@ class AuthController
 
         $email = trim($data['email']);
         $role = $data['role'] ?? 'patient';
+        $dob = !empty($data['dob']) ? $data['dob'] : null;
 
         if ($this->users->emailExists($email)) {
             return $this->jsonResponse($response, ['error' => 'Email already registered'], 409);
         }
 
         $passwordHash = password_hash($data['password'], PASSWORD_BCRYPT);
-        $userId = $this->users->create(trim($data['name']), $email, $passwordHash, $role, $data['dob'] ?? null);
+        $userId = $this->users->create(trim($data['name']), $email, $passwordHash, $role, $dob);
 
         $token = $this->jwt->generateToken($userId, $role);
 
