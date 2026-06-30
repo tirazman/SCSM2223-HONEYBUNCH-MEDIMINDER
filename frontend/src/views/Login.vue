@@ -71,46 +71,27 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '../stores/auth'
 
 const router = useRouter()
+const auth = useAuth()
 const email = ref('')
 const password = ref('')
 const role = ref('patient')
 
-// 1. Define the strictly allowed credentials for each role
-const validDemoAccounts = {
-  'patient': {
-    email: 'patient@mediminder.test',
-    password: 'password'
-  },
-  'caregiver': {
-    email: 'caregiver@mediminder.test',
-    password: 'password'
-  },
-  'admin': {
-    email: 'admin@mediminder.test',
-    password: 'password'
-  }
-}
-
-function handleLogin() {
-  // Check for empty fields first
+async function handleLogin() {
   if (!email.value || !password.value) {
-    alert('🚨 Security Entry Alert: Email and password fields cannot be empty!')
+    alert('🚨 Email and password fields cannot be empty!')
     return
   }
 
-  // 2. Get the expected credentials based on the selected role
-  const expectedAccount = validDemoAccounts[role.value]
+  const success = await auth.login(email.value, password.value)
 
-  // 3. Verify the user input matches the expected demo account
-  if (email.value === expectedAccount.email && password.value === expectedAccount.password) {
-    alert(`✓ Validation Passed! Authenticating user session safely as role: [${role.value}]`)
-    router.push(`/${role.value}`)
+  if (success) {
+    router.push(`/${auth.getUserRole}`)
   } else {
-    // 4. Reject invalid login attempts
-    alert('🚨 Invalid credentials for the selected role! Please use the demo logins provided, or register a new account first.')
-    password.value = '' // Clear the password field after a failed attempt
+    alert('🚨 Invalid email or password.')
+    password.value = ''
   }
 }
 </script>

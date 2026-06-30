@@ -98,7 +98,7 @@
 
     <div v-if="currentView === 'confirm-view'" class="card" style="background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; border-top: 4px solid #10b981;">
       <h2 style="margin: 0 0 5px 0; color: #10b981;">✓ Registration Confirmed</h2>
-      <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px;">Account successfully prepared for deployment.</p>
+      <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px;">Account successfully created.</p>
 
       <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; text-align: left; font-size: 14px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
         <div style="margin-bottom: 8px;"><strong>Assigned System Role:</strong> {{ registeredRole }}</div>
@@ -124,8 +124,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+import { useAuth } from '../stores/auth'
 
 const router = useRouter()
+const auth = useAuth()
+
+const API_BASE = 'http://localhost:8000/api'
 
 // View State Controller
 const currentView = ref('role-view')
@@ -150,7 +155,7 @@ const confirmedData = ref({
 // Navigate between forms and clear inputs
 function showForm(viewId) {
   currentView.value = viewId
-  
+
   fullName.value = ''
   email.value = ''
   password.value = ''
@@ -159,37 +164,74 @@ function showForm(viewId) {
   caregiverEmail.value = ''
 }
 
-// Unified Registration Handler
-function handleRegister(role) {
+// Unified Registration Handler - calls the real Slim backend
+async function handleRegister(role) {
   // Base Validation
   if (!fullName.value || !email.value || !password.value) {
-    alert('🚨 Security Validation Error: All standard fields are strictly required before submitting records!')
+    alert('🚨 All standard fields are required before submitting!')
     return
   }
 
   // Admin Specific Validation
   if (role === 'Admin' && !clinicName.value) {
-    alert('🚨 Validation Error: Clinic/Facility name is required for Admin registration.')
+    alert('🚨 Clinic/Facility name is required for Admin registration.')
     return
   }
 
   // Patient + Linked Caregiver Validation
   if (role === 'Patient' && linkCaregiver.value && !caregiverEmail.value) {
-    alert('🚨 Validation Error: Please provide the caregiver email address to establish the link.')
+    alert('🚨 Please provide the caregiver email address to establish the link.')
     return
   }
 
-  // Preserve state snapshots before wiping inputs
-  registeredRole.value = role
-  confirmedData.value = {
-    name: fullName.value,
-    email: email.value,
-    clinic: clinicName.value,
-    linkedEmail: caregiverEmail.value
-  }
+  // Backend expects lowercase role values: patient, caregiver, admin
+  const backendRole = role.toLowerCase()
 
-  // Transition to confirmation text box summary view
-  currentView.value = 'confirm-view'
+  try {
+    const response = await axios.post(`${API_BASE}/auth/register`, {
+      name: fullName.value,
+      email: email.value,
+      password: password.value,
+      role: backendRole
+    })
+
+    const { token, user } = response.data
+
+    let linkedEmailForDisplay = ''
+    if (role === 'Patient' && linkCaregiver.value) {
+      try {
+        await axios.post(
+          `${API_BASE}/patient-caregiver`,
+          { caregiver_email: caregiverEmail.value },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        linkedEmailForDisplay = caregiverEmail.value
+      } catch (linkError) {
+        console.error('Caregiver linking failed:', linkError.response?.data?.error || linkError.message)
+        alert('Account created, but linking the caregiver failed: ' + (linkError.response?.data?.error || 'unknown error') + '. You can link them later.')
+      }
+    }
+
+    // Log the new user in automatically so they land on their dashboard ready to go
+    auth.token = token
+    auth.user = user
+    auth.isAuthenticated = true
+
+    registeredRole.value = role
+    confirmedData.value = {
+      name: fullName.value,
+      email: email.value,
+      clinic: clinicName.value,
+      linkedEmail: linkedEmailForDisplay
+    }
+
+    currentView.value = 'confirm-view'
+  } catch (error) {
+    const errMsg = error.response?.data?.error
+      || Object.values(error.response?.data?.errors || {}).join(', ')
+      || error.message
+    alert(`🚨 Registration failed: ${errMsg}`)
+  }
 }
 
 // Securely route back to the Login Dashboard route endpoint

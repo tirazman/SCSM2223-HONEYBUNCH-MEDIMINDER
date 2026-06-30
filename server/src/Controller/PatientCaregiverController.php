@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repositories\PatientCaregiverRepository;
+use App\Repositories\UserRepository;
 use App\Validation\Validator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -10,10 +11,12 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class PatientCaregiverController
 {
     private PatientCaregiverRepository $links;
+    private UserRepository $users;
 
     public function __construct()
     {
         $this->links = new PatientCaregiverRepository();
+        $this->users = new UserRepository();
     }
 
     /**
@@ -40,18 +43,33 @@ class PatientCaregiverController
 
     /**
      * Create a new patient-caregiver link.
-     * A patient can link themselves to a caregiver, or an admin can link any pair.
+     * Accepts EITHER caregiver_id (numeric) OR caregiver_email (looked up here).
+     * A patient can only link themselves; an admin may specify any patient_id.
      */
     public function store(Request $request, Response $response): Response
     {
         $data = (array) $request->getParsedBody();
         $tokenData = $request->getAttribute('token');
 
-        $validator = new Validator();
-        $validator->required($data, ['caregiver_id']);
+        if (empty($data['caregiver_id']) && empty($data['caregiver_email'])) {
+            return $this->jsonResponse($response, ['errors' => ['caregiver' => 'caregiver_id or caregiver_email is required']], 422);
+        }
 
-        if ($validator->fails()) {
-            return $this->jsonResponse($response, ['errors' => $validator->getErrors()], 422);
+        // Resolve caregiver_email -> caregiver_id if an id wasn't given directly
+        if (!empty($data['caregiver_email'])) {
+            $caregiverUser = $this->users->findByEmail(trim($data['caregiver_email']));
+
+            if (!$caregiverUser) {
+                return $this->jsonResponse($response, ['error' => 'No account found with that caregiver email'], 404);
+            }
+
+            if ($caregiverUser['role'] !== 'caregiver') {
+                return $this->jsonResponse($response, ['error' => 'That email does not belong to a caregiver account'], 422);
+            }
+
+            $caregiverId = (int) $caregiverUser['id'];
+        } else {
+            $caregiverId = (int) $data['caregiver_id'];
         }
 
         // If the requester is a patient, they can only link themselves.
@@ -64,7 +82,7 @@ class PatientCaregiverController
             return $this->jsonResponse($response, ['error' => 'patient_id is required'], 422);
         }
 
-        $id = $this->links->create($patientId, (int) $data['caregiver_id']);
+        $id = $this->links->create($patientId, $caregiverId);
         $link = $this->links->findById($id);
 
         return $this->jsonResponse($response, ['link' => $link], 201);
