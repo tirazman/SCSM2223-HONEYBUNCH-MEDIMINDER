@@ -12,11 +12,6 @@
   --status-success: #10b981;    
   --status-danger: #ef4444;     
   --status-pending: #3b82f6;  
-  
-  --toastify-color-success: #10b981;
-  --toastify-color-error: #ef4444;
-  --toastify-toast-min-height: 56px;
-  --toastify-toast-width: 360px;
 }
 
 * {
@@ -289,7 +284,6 @@ a:hover {
   cursor: pointer;
   font-weight: bold;
 }
-
 .profile-dropdown {
   --pd-bg: #042238;
   --pd-bg-hover: #0b3654;

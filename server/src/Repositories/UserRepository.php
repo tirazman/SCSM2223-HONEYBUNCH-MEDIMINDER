@@ -58,4 +58,47 @@ class UserRepository
         $stmt->execute(['email' => $email]);
         return (bool) $stmt->fetch();
     }
+
+    /**
+     * Checks if `email` is already used by a *different* user than $excludeId.
+     * Used so a user can save their own profile without tripping over their
+     * own unchanged email address.
+     */
+    public function emailExistsForOtherUser(string $email, int $excludeId): bool
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id FROM User WHERE email = :email AND id != :id LIMIT 1'
+        );
+        $stmt->execute(['email' => $email, 'id' => $excludeId]);
+        return (bool) $stmt->fetch();
+    }
+
+    /**
+     * Updates only the fields present in $fields. Supported keys:
+     * 'name', 'email', 'dob', 'password_hash'. Returns the updated user
+     * (without password_hash, via findById) or null if the user doesn't exist.
+     */
+    public function update(int $id, array $fields): ?array
+    {
+        $allowed = ['name', 'email', 'dob', 'password_hash'];
+        $set = [];
+        $params = ['id' => $id];
+
+        foreach ($allowed as $key) {
+            if (array_key_exists($key, $fields)) {
+                $set[] = "{$key} = :{$key}";
+                $params[$key] = $fields[$key];
+            }
+        }
+
+        if (empty($set)) {
+            return $this->findById($id);
+        }
+
+        $sql = 'UPDATE User SET ' . implode(', ', $set) . ' WHERE id = :id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+
+        return $this->findById($id);
+    }
 }

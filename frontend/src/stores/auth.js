@@ -34,6 +34,38 @@ export const useAuth = defineStore('auth', {
       }
     },
 
+    /**
+     * Updates the logged-in user's profile (name, email, dob, and
+     * optionally password). Only send the fields that actually changed —
+     * the backend only touches keys present in the payload.
+     *
+     * @param {{ name?: string, email?: string, dob?: string|null, password?: string }} payload
+     */
+    async updateProfile(payload) {
+      try {
+        const response = await axios.put(
+          `${API_BASE}/auth/profile`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${this.token}`
+            }
+          }
+        )
+
+        // Backend returns the fresh user row (without password_hash).
+        this.user = response.data.user
+
+        return { success: true }
+      } catch (error) {
+        const message =
+          error.response?.data?.error ||
+          error.response?.data?.errors ||
+          'Could not update profile'
+        return { success: false, error: message }
+      }
+    },
+
     logout() {
       this.user = null
       this.token = null
