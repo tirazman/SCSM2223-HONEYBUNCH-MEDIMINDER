@@ -29,6 +29,10 @@ $app->add(function (Request $request, $handler) {
         ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });
 
+$app->options('/{routes:.+}', function (Request $request, Response $response) {
+    return $response;
+});
+
 $app->get('/api/health', function (Request $request, Response $response) {
     $payload = json_encode(['status' => 'success', 'message' => 'Slim 4 Backend is working perfectly!']);
     $response->getBody()->write($payload);
