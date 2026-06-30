@@ -14,8 +14,13 @@ const router = createRouter({
     { path: '/login', component: Login },
     { path: '/patient', component: Patient },
     { path: '/caregiver', component: Caregiver },
-    { path: '/admin', component: Admin }
-  ]
-})
+    { path: '/admin', component: Admin },
+    {
+      path: '/adherence',
+      name: 'adherence',
+      component: () => import('../views/AdherenceDashboard.vue'),
+      meta: { requiresAuth: true } 
+    }
+]})
 
 export default router

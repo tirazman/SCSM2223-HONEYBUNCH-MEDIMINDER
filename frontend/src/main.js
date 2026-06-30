@@ -16,5 +16,17 @@ app.use(Toast, {
   position: 'top-right',
   timeout: 4000,
   closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  maxToasts: 5,
+  newestOnTop: true,
 })
+
+const options = {
+  toastClassName: "my-custom-toast-class",
+  bodyClassName: "my-custom-toast-body",
+  containerClassName: "my-toast-container"
+};
+
+app.use(Toast, options);
 app.mount('#app')

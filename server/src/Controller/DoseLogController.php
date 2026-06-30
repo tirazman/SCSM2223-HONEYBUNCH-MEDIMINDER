@@ -7,6 +7,8 @@ use App\Repositories\PatientCaregiverRepository;
 use App\Validation\Validator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class DoseLogController
 {
@@ -184,6 +186,132 @@ class DoseLogController
         return false;
     }
 
+    public function export(Request $request, Response $response, array $args): Response {
+        $tokenData = $request->getAttribute('token');
+        $params = $request->getQueryParams();
+        $role = $tokenData['role'];
+        $userId = (int) $tokenData['sub'];
+
+        $format = strtolower($args['format'] ?? '');
+        if (!in_array($format, ['csv', 'pdf'], true)) {
+            return $this->jsonResponse($response, ['error' => 'Unsupported export format'], 422);
+        }
+
+        // Same resolution pattern as adherence(): patients default to self, others must specify
+        $patientId = $role === 'patient' ? $userId : (int) ($params['patient_id'] ?? 0);
+
+        if ($patientId === 0) {
+            return $this->jsonResponse($response, ['error' => 'patient_id is required'], 422);
+        }
+
+        if (!$this->canAccess($tokenData, $patientId)) {
+            return $this->jsonResponse($response, ['error' => 'Forbidden'], 403);
+        }
+
+        // Default to last 30 days for export, same range conventions as adherence()
+        $toDate = $params['to_date'] ?? date('Y-m-d');
+        $fromDate = $params['from_date'] ?? date('Y-m-d', strtotime('-30 days'));
+
+        $logs = $this->doseLogs->findByPatientId($patientId, $fromDate, $toDate);
+
+        if ($format === 'csv') {
+            return $this->streamCsv($response, $logs);
+        }
+
+        return $this->streamPdf($response, $logs);
+    }
+
+    private function streamCsv(Response $response, array $logs): Response
+    {
+        $csv = fopen('php://temp', 'r+');
+
+        fputcsv($csv, ['Drug Name', 'Dose', 'Frequency', 'Scheduled At', 'Taken At', 'Status']);
+
+        foreach ($logs as $log) {
+            fputcsv($csv, [
+                $log['drug_name'],
+                $log['dose'],
+                $log['frequency'],
+                $log['scheduled_at'],
+                $log['taken_at'] ?? 'N/A',
+                $log['status'],
+            ]);
+        }
+
+        rewind($csv);
+        $contents = stream_get_contents($csv);
+        fclose($csv);
+
+        $response->getBody()->write($contents);
+
+        return $response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename="adherence_summary_' . date('Y-m-d') . '.csv"')
+            ->withStatus(200);
+    }
+
+    private function streamPdf(Response $response, array $logs): Response
+    {
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($this->renderAdherenceHtml($logs));
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $response->getBody()->write($dompdf->output());
+
+        return $response
+            ->withHeader('Content-Type', 'application/pdf')
+            ->withHeader('Content-Disposition', 'attachment; filename="adherence_summary_' . date('Y-m-d') . '.pdf"')
+            ->withStatus(200);
+    }
+
+    private function renderAdherenceHtml(array $logs): string
+    {
+        $rows = '';
+        foreach ($logs as $log) {
+            $rows .= sprintf(
+                '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+                htmlspecialchars($log['drug_name']),
+                htmlspecialchars($log['dose']),
+                htmlspecialchars($log['scheduled_at']),
+                htmlspecialchars($log['taken_at'] ?? 'N/A'),
+                htmlspecialchars($log['status'])
+            );
+        }
+
+    return <<<HTML
+    <html>
+    <head>
+        <style>
+            body { font-family: sans-serif; font-size: 12px; }
+            h1 { font-size: 18px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+            th { background-color: #f3f4f6; }
+        </style>
+    </head>
+    <body>
+        <h1>Medication Adherence Summary</h1>
+        <p>Generated on {$this->formattedDate()}</p>
+        <table>
+            <thead>
+                <tr><th>Drug</th><th>Dose</th><th>Scheduled</th><th>Taken At</th><th>Status</th></tr>
+            </thead>
+            <tbody>{$rows}</tbody>
+        </table>
+    </body>
+    </html>
+    HTML;
+}
+
+    private function formattedDate(): string
+    {
+        return date('F j, Y');
+    }
     private function jsonResponse(Response $response, array $payload, int $status): Response
     {
         $response->getBody()->write(json_encode($payload));

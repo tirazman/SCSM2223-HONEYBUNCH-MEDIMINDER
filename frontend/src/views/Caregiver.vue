@@ -27,6 +27,11 @@
             <strong class="badge" :class="patient.rateClass" style="font-size: 16px;">
               {{ patient.rate }}
             </strong>
+            <div style="margin-top: 8px;">
+              <router-link :to="`/adherence?patient_id=${patient.id}`" class="btn-success" style="display: inline-block; padding: 6px 12px; font-size: 13px; text-decoration: none;">
+                Export Report
+              </router-link>
+            </div>
           </div>
         </div>
 

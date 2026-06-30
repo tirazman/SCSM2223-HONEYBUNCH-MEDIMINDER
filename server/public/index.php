@@ -63,6 +63,7 @@ $app->get('/api/dose-logs/adherence', [DoseLogController::class, 'adherence'])->
 $app->post('/api/dose-logs', [DoseLogController::class, 'store'])->add(new JWTMiddleware(['caregiver', 'admin']));
 $app->put('/api/dose-logs/{id}/status', [DoseLogController::class, 'updateStatus'])->add(new JWTMiddleware());
 $app->delete('/api/dose-logs/{id}', [DoseLogController::class, 'destroy'])->add(new JWTMiddleware(['caregiver', 'admin']));
+$app->get('/api/dose-logs/export/{format}', [DoseLogController::class, 'export'])->add(new JWTMiddleware());
 
 // ---- PatientCaregiver routes ----
 $app->get('/api/caregiver/patients', [PatientCaregiverController::class, 'myPatients'])->add(new JWTMiddleware(['caregiver']));
