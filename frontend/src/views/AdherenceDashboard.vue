@@ -66,7 +66,6 @@ const isExporting = ref(false) // false | 'csv' | 'pdf'
 const canExport = computed(() => {
   return auth.getUserRole === 'patient' || selectedPatientId.value !== null
 })
-
 onMounted(async () => {
   if (route.query.patient_id) {
     selectedPatientId.value = parseInt(route.query.patient_id, 10)

@@ -165,6 +165,33 @@ button:hover, .btn:hover {
 .btn-danger { background-color: var(--status-danger); }
 .btn-danger:hover { background-color: #dc2626; }
 
+/* Unified Adherence Report button — used on Patient, Caregiver, and Admin
+   dashboards. Sized for inline placement next to a card header or row,
+   unlike the full-width .btn / .btn-success defaults above. */
+.btn-export-report {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: var(--status-success);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+
+.btn-export-report:hover {
+  background-color: #059669;
+  text-decoration: none;
+}
+
 /* Dashboard Layout Grids */
 .dashboard-grid {
   display: grid;

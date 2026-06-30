@@ -103,7 +103,11 @@
             86.5%
           </div>
           <p style="margin: 0; font-size: 13px; color: #6b7280;">Great progress! You missed only 2 doses this past week.</p>
+<<<<<<< Updated upstream
           <router-link to="/adherence" class="btn-success" style="display: inline-block; margin-top: 10px; padding: 8px 15px; text-decoration: none; font-size: 13px; font-weight: 600; background-color: #10b981; color: white; border-radius: 6px;">
+=======
+          <router-link to="/adherence" class="btn-export-report" style="margin-top: 10px;">
+>>>>>>> Stashed changes
             📊 Export My Report
           </router-link>
         </div>

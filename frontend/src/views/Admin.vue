@@ -4,9 +4,14 @@
       <div>
         <h1 style="margin: 0; font-size: 24px; color: #1f2937; font-weight: 700;">MediMinder Clinic Portal</h1>
       </div>
-      <button @click="showForm = !showForm" style="padding: 8px 16px; font-size: 13px; font-weight: 600; background-color: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
-        {{ showForm ? '✕ Close Form' : '➕ New Prescription' }}
-      </button>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <router-link to="/adherence" class="btn-export-report">
+          📊 Adherence Report
+        </router-link>
+        <button @click="showForm = !showForm" style="padding: 8px 16px; font-size: 13px; font-weight: 600; background-color: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">
+          {{ showForm ? '✕ Close Form' : '➕ New Prescription' }}
+        </button>
+      </div>
     </header>
 
     <div v-if="showForm" class="card" style="margin-bottom: 30px; background: #ffffff; padding: 25px; border-radius: 8px; border: 1px solid #e5e7eb;">
