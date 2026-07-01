@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-const API_BASE = 'https://scsm2223-honeybunch-mediminder-1.onrender.com'
+const API_BASE = 'https://scsm2223-honeybunch-mediminder.onrender.com'
 
 export const useAuth = defineStore('auth', {
   state: () => ({
