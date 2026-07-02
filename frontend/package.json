@@ -17,6 +17,9 @@
   "main": "./lib/index.js",
   "dependencies": {
     "@babel/helper-validator-identifier": "^7.29.7",
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
     "@capacitor/local-notifications": "^8.2.0",
     "axios": "^1.18.1",
     "js-tokens": "^4.0.0",
